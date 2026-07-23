@@ -141,3 +141,41 @@ input[type="range"] {
 
 details summary { cursor: pointer; color: var(--muted); }
 
+.tag-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.tag-btn {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid #2e3f31;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.6rem;
+}
+
+.tag-btn.tagged { border-color: var(--accent); }
+
+.tag-value { color: var(--accent); font-weight: 700; }
+
+.keyframes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.keyframes-grid figure { margin: 0; }
+
+.keyframes-grid img { width: 100%; border-radius: 8px; display: block; }
+
+.keyframes-grid figcaption {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  text-align: center;
+}
+

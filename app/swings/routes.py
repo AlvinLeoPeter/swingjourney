@@ -9,7 +9,15 @@ from flask_login import current_user, login_required
 
 from .. import db, tasks
 from ..config import DERIVED_DIR, UPLOAD_DIR
-from ..models import CLUBS, SWING_TYPES, Session, Swing
+from ..models import CLUBS, SWING_TYPES, Analysis, Session, Swing
+
+# The four key swing positions, in required chronological order
+POSITIONS = [
+    ("p1", "Address"),
+    ("p4", "Top of backswing"),
+    ("p7", "Impact"),
+    ("p10", "Finish"),
+]
 
 bp = Blueprint("swings", __name__, url_prefix="/swings")
 
@@ -112,6 +120,44 @@ def status(swing_id):
     swing = _get_own_swing(swing_id)
     return jsonify(
         status=swing.status, frame_count=swing.frame_count, error=swing.error
+    )
+
+
+@bp.route("/<int:swing_id>/tag", methods=["GET", "POST"])
+@login_required
+def tag(swing_id):
+    swing = _get_own_swing(swing_id)
+    if swing.status != "ready" or not swing.frame_count:
+        flash("This swing isn't processed yet.")
+        return redirect(url_for("swings.detail", swing_id=swing.id))
+
+    analysis = swing.latest_analysis
+    if request.method == "POST":
+        try:
+            frames = {key: int(request.form[key]) for key, _ in POSITIONS}
+        except (KeyError, ValueError):
+            flash("Tag all four positions before saving.")
+            return redirect(url_for("swings.tag", swing_id=swing.id))
+
+        ordered = [frames[key] for key, _ in POSITIONS]
+        if ordered != sorted(ordered) or len(set(ordered)) != 4:
+            flash("Positions must be in order: Address < Top < Impact < Finish.")
+            return redirect(url_for("swings.tag", swing_id=swing.id))
+        if ordered[0] < 0 or ordered[-1] >= swing.frame_count:
+            flash("A tagged frame is outside the video.")
+            return redirect(url_for("swings.tag", swing_id=swing.id))
+
+        if analysis is None:
+            analysis = Analysis(swing_id=swing.id)
+            db.session.add(analysis)
+        analysis.key_positions = {**frames, "method": "manual", "confidence": 1.0}
+        db.session.commit()
+        flash("Key positions saved.")
+        return redirect(url_for("swings.detail", swing_id=swing.id))
+
+    existing = (analysis.key_positions or {}) if analysis else {}
+    return render_template(
+        "swings/tag.html", swing=swing, positions=POSITIONS, existing=existing
     )
 
 

@@ -7,7 +7,28 @@
   {% if swing.error %}<span class="error">{{ swing.error }}</span>{% endif %}
 </p>
 
+{% set analysis = swing.latest_analysis %}
 {% if swing.status == "ready" and swing.frame_count %}
+  {% if analysis and analysis.key_positions %}
+    <div class="card">
+      <h2>Key positions</h2>
+      <div class="keyframes-grid">
+        {% for key, label in [("p1", "Address"), ("p4", "Top"), ("p7", "Impact"), ("p10", "Finish")] %}
+          <figure>
+            <img src="{{ url_for('swings.overlay_frame', swing_id=swing.id, n=analysis.key_positions[key]) }}"
+                 alt="{{ label }}">
+            <figcaption>{{ label }} · frame {{ analysis.key_positions[key] }}</figcaption>
+          </figure>
+        {% endfor %}
+      </div>
+      <a href="{{ url_for('swings.tag', swing_id=swing.id) }}" class="muted">Re-tag positions</a>
+    </div>
+  {% else %}
+    <a href="{{ url_for('swings.tag', swing_id=swing.id) }}" class="btn primary">
+      Tag key positions
+    </a>
+  {% endif %}
+
   <div class="card">
     <img id="scrub-img" class="scrub-img"
          src="{{ url_for('swings.overlay_frame', swing_id=swing.id, n=0) }}"

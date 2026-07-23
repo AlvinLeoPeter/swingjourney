@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Tag positions — SwingJourney{% endblock %}
+{% block content %}
+<h1>Tag key positions</h1>
+<p class="muted">Scrub to each moment, then tap its button. Order must be
+Address → Top → Impact → Finish.</p>
+
+<div class="card">
+  <img id="scrub-img" class="scrub-img"
+       src="{{ url_for('swings.overlay_frame', swing_id=swing.id, n=0) }}"
+       alt="Pose overlay frame">
+  <input id="scrub" type="range" min="0" max="{{ swing.frame_count - 1 }}" value="0" step="1">
+  <p class="muted">Frame <span id="frame-no">0</span> / {{ swing.frame_count - 1 }}</p>
+</div>
+
+<form method="post" class="card form" id="tag-form">
+  <div class="tag-grid">
+    {% for key, label in positions %}
+      <button type="button" class="btn tag-btn" data-key="{{ key }}">
+        {{ label }}
+        <span class="tag-value" id="val-{{ key }}">
+          {{ existing.get(key, "—") }}
+        </span>
+      </button>
+      <input type="hidden" name="{{ key }}" id="input-{{ key }}"
+             value="{{ existing.get(key, '') }}">
+    {% endfor %}
+  </div>
+  <button type="submit" class="btn primary">Save positions</button>
+</form>
+
+<script>
+  const img = document.getElementById("scrub-img");
+  const slider = document.getElementById("scrub");
+  const frameNo = document.getElementById("frame-no");
+  const urlFor = n => "{{ url_for('swings.overlay_frame', swing_id=swing.id, n=0) }}".replace(/0$/, n);
+
+  slider.addEventListener("input", () => {
+    const n = Number(slider.value);
+    img.src = urlFor(n);
+    frameNo.textContent = n;
+    [n + 1, n - 1].forEach(m => {
+      if (m >= 0 && m <= Number(slider.max)) new Image().src = urlFor(m);
+    });
+  });
+
+  document.querySelectorAll(".tag-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.key;
+      document.getElementById("input-" + key).value = slider.value;
+      document.getElementById("val-" + key).textContent = slider.value;
+      btn.classList.add("tagged");
+    });
+  });
+</script>
+{% endblock %}
