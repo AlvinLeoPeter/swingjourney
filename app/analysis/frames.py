@@ -1,7 +1,9 @@
 """Frame extraction: video file -> numbered JPEGs at a sane size/rate.
 
-We cap at 720p and ~30fps: plenty for pose estimation, and it keeps
-processing fast enough for the Range Mode 60-second target later.
+We cap at 720p and ~60fps. Pose estimation is happy at 30, but tempo ratio
+is quantized by frame rate (a driver downswing is only ~8 frames at 30fps),
+so we keep 60 when the source has it. Processing cost roughly doubles —
+acceptable; revisit if Range Mode misses its 60-second target.
 """
 
 from pathlib import Path
@@ -9,7 +11,7 @@ from pathlib import Path
 import cv2
 
 MAX_HEIGHT = 720
-MAX_FPS = 30.0
+MAX_FPS = 60.0
 JPEG_QUALITY = [cv2.IMWRITE_JPEG_QUALITY, 80]
 
 
