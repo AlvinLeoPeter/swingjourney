@@ -1,3 +1,4 @@
+import json
 import uuid
 from datetime import date
 
@@ -151,8 +152,20 @@ def tag(swing_id):
             analysis = Analysis(swing_id=swing.id)
             db.session.add(analysis)
         analysis.key_positions = {**frames, "method": "manual", "confidence": 1.0}
+
+        # Metrics are pure math over already-extracted landmarks — instant.
+        from ..analysis.metrics import METRICS_VERSION, compute_metrics
+
+        with open(DERIVED_DIR / str(swing.id) / "landmarks.json") as fh:
+            data = json.load(fh)
+        result = compute_metrics(
+            data["landmarks"], frames, fps=swing.fps, swing_type=swing.swing_type
+        )
+        analysis.metrics = {"metrics": result["metrics"], "notes": result["notes"]}
+        analysis.quality = data["quality"]
+        analysis.model_version = METRICS_VERSION
         db.session.commit()
-        flash("Key positions saved.")
+        flash("Key positions saved — metrics computed.")
         return redirect(url_for("swings.detail", swing_id=swing.id))
 
     existing = (analysis.key_positions or {}) if analysis else {}

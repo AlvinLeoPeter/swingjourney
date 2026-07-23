@@ -23,6 +23,41 @@
       </div>
       <a href="{{ url_for('swings.tag', swing_id=swing.id) }}" class="muted">Re-tag positions</a>
     </div>
+
+    {% if analysis.metrics %}
+      <div class="card">
+        <h2>Metrics</h2>
+        {% if analysis.quality and analysis.quality.mean_key_visibility < 0.7 %}
+          <p class="quality-warn">⚠️ Landmark visibility was
+            {{ (analysis.quality.mean_key_visibility * 100)|round|int }}% —
+            treat these numbers with care. Better light / tighter clothing helps.</p>
+        {% endif %}
+        <table class="metrics-table">
+          <thead><tr><th>Metric</th><th>Value</th><th>Benchmark</th></tr></thead>
+          <tbody>
+            {% for key, m in analysis.metrics.metrics.items() %}
+              <tr>
+                <td>{{ m.label }}
+                  {% if m.note %}<span class="metric-note">{{ m.note }}</span>{% endif %}
+                </td>
+                <td class="metric-value">
+                  {% if m.value is not none %}
+                    {{ m.value }}{{ m.unit if m.unit != ":1" else "" }}{{ ":1" if m.unit == ":1" }}
+                    {% if m.confidence == "low" %}<span class="low-conf">low confidence</span>{% endif %}
+                  {% else %}
+                    <span class="low-conf">n/a</span>
+                  {% endif %}
+                </td>
+                <td class="muted">{{ m.benchmark }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% for note in analysis.metrics.notes %}
+          <p class="muted">{{ note }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
   {% else %}
     <a href="{{ url_for('swings.tag', swing_id=swing.id) }}" class="btn primary">
       Tag key positions

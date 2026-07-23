@@ -179,3 +179,50 @@ details summary { cursor: pointer; color: var(--muted); }
   text-align: center;
 }
 
+.metrics-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.metrics-table th {
+  text-align: left;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid #2e3f31;
+}
+
+.metrics-table td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #22301f;
+  vertical-align: top;
+}
+
+.metric-value { font-weight: 700; white-space: nowrap; }
+
+.metric-note {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+.low-conf {
+  display: inline-block;
+  background: #4a4326;
+  color: #e8d98a;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  margin-left: 0.3rem;
+}
+
+.quality-warn {
+  background: #4a3a26;
+  color: #f0d9b0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
