@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Upload swing — SwingJourney{% endblock %}
+{% block content %}
+<h1>Upload a swing</h1>
+<form method="post" enctype="multipart/form-data" class="card form">
+  <label>Video (MP4/MOV, max 30s, filmed face-on)
+    <input type="file" name="video" accept="video/mp4,video/quicktime,video/webm" required>
+  </label>
+  <label>Swing type
+    <select name="swing_type">
+      {% for t in swing_types %}
+        <option value="{{ t }}">{{ t|capitalize }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Club
+    <select name="club">
+      {% for c in clubs %}
+        <option value="{{ c }}" {% if c == "7i" %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <button type="submit" class="btn primary">Upload</button>
+  <p class="muted">Full analysis is for full swings; pitch/chip/putt get pose overlay + tempo for now.</p>
+</form>
+{% endblock %}

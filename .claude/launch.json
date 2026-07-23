@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "swingjourney",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "cd /Users/alvinleopeter/GolfSwingAnalyzer && exec ./venv/bin/python run.py"],
+      "port": 5001
+    }
+  ]
+}
