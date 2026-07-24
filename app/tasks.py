@@ -62,6 +62,8 @@ def process_swing(swing_id: int):
                 model_path=POSE_MODEL_PATH,
             )
 
+            _auto_detect(swing, swing_dir)
+
             swing.status = "ready"
             swing.error = None
         except Exception as exc:  # keep the row honest instead of crashing the worker
@@ -69,3 +71,33 @@ def process_swing(swing_id: int):
             swing.status = "failed"
             swing.error = str(exc)
         db.session.commit()
+
+
+def _auto_detect(swing, swing_dir):
+    """Try automatic key-position detection. High confidence -> full analysis
+    with metrics, no tagging needed. Low confidence -> stash the guesses so
+    the manual tag UI can prefill them. Never touches manual tags."""
+    import json
+
+    from .analysis.positions import AUTO_CONFIDENCE_MIN, detect_positions
+    from .services import apply_key_positions
+
+    landmarks_path = swing_dir / "landmarks.json"
+    with open(landmarks_path) as fh:
+        data = json.load(fh)
+
+    result = detect_positions(data["landmarks"], fps=swing.fps)
+    if result is None:
+        return
+
+    data["auto_positions"] = result
+    with open(landmarks_path, "w") as fh:
+        json.dump(data, fh)
+
+    existing = swing.latest_analysis
+    if existing and existing.key_positions and existing.key_positions.get("method") == "manual":
+        return  # a human's tags outrank the robot's
+
+    if result["confidence"] >= AUTO_CONFIDENCE_MIN:
+        frames = {k: result[k] for k in ("p1", "p4", "p7", "p10")}
+        apply_key_positions(swing, frames, method="auto", confidence=result["confidence"])

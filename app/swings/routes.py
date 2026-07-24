@@ -1,4 +1,3 @@
-import json
 import uuid
 from datetime import date
 
@@ -10,7 +9,7 @@ from flask_login import current_user, login_required
 
 from .. import db, tasks
 from ..config import DERIVED_DIR, UPLOAD_DIR
-from ..models import CLUBS, SWING_TYPES, Analysis, Session, Swing
+from ..models import CLUBS, SWING_TYPES, Session, Swing
 
 # The four key swing positions, in required chronological order
 POSITIONS = [
@@ -148,27 +147,21 @@ def tag(swing_id):
             flash("A tagged frame is outside the video.")
             return redirect(url_for("swings.tag", swing_id=swing.id))
 
-        if analysis is None:
-            analysis = Analysis(swing_id=swing.id)
-            db.session.add(analysis)
-        analysis.key_positions = {**frames, "method": "manual", "confidence": 1.0}
+        from ..services import apply_key_positions
 
-        # Metrics are pure math over already-extracted landmarks — instant.
-        from ..analysis.metrics import METRICS_VERSION, compute_metrics
-
-        with open(DERIVED_DIR / str(swing.id) / "landmarks.json") as fh:
-            data = json.load(fh)
-        result = compute_metrics(
-            data["landmarks"], frames, fps=swing.fps, swing_type=swing.swing_type
-        )
-        analysis.metrics = {"metrics": result["metrics"], "notes": result["notes"]}
-        analysis.quality = data["quality"]
-        analysis.model_version = METRICS_VERSION
+        apply_key_positions(swing, frames, method="manual", confidence=1.0)
         db.session.commit()
         flash("Key positions saved — metrics computed.")
         return redirect(url_for("swings.detail", swing_id=swing.id))
 
     existing = (analysis.key_positions or {}) if analysis else {}
+    if not existing:
+        # No tags yet — prefill with the pipeline's auto guesses if it made any
+        from ..services import load_landmarks
+
+        auto = load_landmarks(swing.id).get("auto_positions")
+        if auto:
+            existing = auto
     return render_template(
         "swings/tag.html", swing=swing, positions=POSITIONS, existing=existing
     )

@@ -2,7 +2,8 @@
 
 Coordinate system reminder: normalized image coords, x grows right,
 y grows DOWN. The synthetic golfer faces the camera, target to image right
-(hands finish right of the hips), i.e. right-handed and not mirrored.
+(hips finish shifted right, over the lead leg), i.e. right-handed and
+not mirrored.
 """
 
 import math
@@ -40,8 +41,12 @@ def landmarks_for(frames_map, total):
     return [frames_map.get(i) for i in range(total)]
 
 
-# Finish frame with hands to the image-right of hips -> target is image right
-FINISH = make_frame({15: (0.75, 0.30), 16: (0.75, 0.30)})
+# Finish: hips shifted toward image right (stacked over lead leg) -> target
+# is image right. Hands wrap to the trail side like a real finish.
+FINISH = make_frame({
+    15: (0.45, 0.30), 16: (0.45, 0.30),   # hands wrapped, trail side
+    23: (0.66, 0.55), 24: (0.54, 0.55),   # hips finished toward target
+})
 KEYS = {"p1": 0, "p4": 30, "p7": 40, "p10": 60}
 
 

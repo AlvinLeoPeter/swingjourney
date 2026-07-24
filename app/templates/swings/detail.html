@@ -21,7 +21,15 @@
           </figure>
         {% endfor %}
       </div>
-      <a href="{{ url_for('swings.tag', swing_id=swing.id) }}" class="muted">Re-tag positions</a>
+      <p class="muted">
+        {% if analysis.key_positions.method == "auto" %}
+          Auto-detected ({{ (analysis.key_positions.confidence * 100)|round|int }}% confidence) —
+          <a href="{{ url_for('swings.tag', swing_id=swing.id) }}">check &amp; correct</a>
+        {% else %}
+          Tagged manually —
+          <a href="{{ url_for('swings.tag', swing_id=swing.id) }}">re-tag</a>
+        {% endif %}
+      </p>
     </div>
 
     {% if analysis.metrics %}

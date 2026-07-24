@@ -10,7 +10,7 @@ Honesty rules baked in:
 - Full metric suite only for full swings; everything else gets tempo only.
 
 Assumes a right-handed golfer for the lead arm (noted on the report).
-Target direction is inferred from where the hands finish (P10).
+Target direction is inferred from hip displacement into the finish (P10).
 """
 
 import math
@@ -104,12 +104,14 @@ def compute_metrics(landmarks, key_positions, fps, swing_type="full"):
         if at[name] is None:
             notes.append(f"No pose detected on the {name.upper()} frame — some metrics unavailable.")
 
-    # Target direction from where the hands finish (also tells us lead side)
+    # Target direction: the hips finish stacked over the lead leg, toward
+    # the target. (Don't use the hands — in a full finish they wrap around
+    # the neck and end up on the trail side, which fooled us once already.)
     target_sign = None
-    if at["p10"] and at["p1"] and _visible(at["p10"], [L_WRIST, R_WRIST, L_HIP, R_HIP]):
-        wrist_mid_x = (at["p10"][L_WRIST]["x"] + at["p10"][R_WRIST]["x"]) / 2
-        hip_mid_x = _mid(at["p10"], L_HIP, R_HIP)[0]
-        target_sign = 1.0 if wrist_mid_x > hip_mid_x else -1.0
+    if at["p10"] and at["p1"] and _visible(at["p1"], [L_HIP, R_HIP]) and _visible(at["p10"], [L_HIP, R_HIP]):
+        dx = _mid(at["p10"], L_HIP, R_HIP)[0] - _mid(at["p1"], L_HIP, R_HIP)[0]
+        if abs(dx) > 0.01:  # need a real shift before trusting the sign
+            target_sign = 1.0 if dx > 0 else -1.0
 
     def toward_target(dx):
         """Convert an image-x displacement to signed 'toward target' value."""
