@@ -30,4 +30,45 @@ def apply_key_positions(swing: Swing, frames: dict, method: str, confidence: flo
     analysis.metrics = {"metrics": result["metrics"], "notes": result["notes"]}
     analysis.quality = data["quality"]
     analysis.model_version = METRICS_VERSION
+
+    # Annotated key-frame images (skeleton + arcs + labels)
+    from .analysis.annotate import render_key_frames
+
+    swing_dir = DERIVED_DIR / str(swing.id)
+    render_key_frames(
+        swing_dir / "frames",
+        data["landmarks"],
+        frames,
+        result["metrics"],
+        swing_dir / "keyframes",
+    )
     return analysis
+
+
+def generate_coaching_for(swing: Swing) -> bool:
+    """Call Claude with the analysis metrics; store notes on the analysis.
+    Returns False when the swing isn't eligible. Caller commits."""
+    from .analysis.coach import generate_coaching
+
+    analysis = swing.latest_analysis
+    if (
+        analysis is None
+        or not analysis.metrics
+        or swing.swing_type != "full"
+    ):
+        return False
+
+    try:
+        analysis.coaching = generate_coaching(
+            metrics=analysis.metrics["metrics"],
+            swing_meta={
+                "club": swing.club,
+                "swing_type": swing.swing_type,
+                "date": swing.created_at.date().isoformat(),
+                "camera_angle": swing.camera_angle,
+            },
+            quality=analysis.quality or {},
+        )
+    except Exception as exc:
+        analysis.coaching = {"error": str(exc)}
+    return True

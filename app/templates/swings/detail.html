@@ -15,7 +15,8 @@
       <div class="keyframes-grid">
         {% for key, label in [("p1", "Address"), ("p4", "Top"), ("p7", "Impact"), ("p10", "Finish")] %}
           <figure>
-            <img src="{{ url_for('swings.overlay_frame', swing_id=swing.id, n=analysis.key_positions[key]) }}"
+            <img src="{{ url_for('swings.keyframe', swing_id=swing.id, pos=key) }}"
+                 onerror="this.src='{{ url_for('swings.overlay_frame', swing_id=swing.id, n=analysis.key_positions[key]) }}'"
                  alt="{{ label }}">
             <figcaption>{{ label }} · frame {{ analysis.key_positions[key] }}</figcaption>
           </figure>
@@ -65,6 +66,45 @@
           <p class="muted">{{ note }}</p>
         {% endfor %}
       </div>
+
+      {% if analysis.coaching and not analysis.coaching.error %}
+        <div class="card coaching">
+          <h2>Coach's notes</h2>
+          <p class="one-liner">“{{ analysis.coaching.one_liner }}”</p>
+          <h3>What's working</h3>
+          <ul>
+            {% for s in analysis.coaching.strengths %}<li>{{ s }}</li>{% endfor %}
+          </ul>
+          <h3>Priority fixes</h3>
+          <ol>
+            {% for f in analysis.coaching.fixes %}
+              <li>
+                {{ f.issue }}
+                <span class="drill">Drill: {{ f.drill }}</span>
+              </li>
+            {% endfor %}
+          </ol>
+          <p class="muted">AI-generated from the measured numbers above — 2D estimates, not a launch monitor.</p>
+        </div>
+      {% elif analysis.coaching and analysis.coaching.error %}
+        <div class="card">
+          <p class="error">Coaching notes failed: {{ analysis.coaching.error }}</p>
+          <p class="muted">Re-save the key positions to retry.</p>
+        </div>
+      {% elif swing.swing_type == "full" %}
+        <div class="card" id="coaching-pending">
+          <p class="muted">Writing your coaching notes…</p>
+        </div>
+        <script>
+          async function pollCoaching() {
+            const res = await fetch("{{ url_for('swings.status', swing_id=swing.id) }}");
+            const data = await res.json();
+            if (data.has_coaching) location.reload();
+            else setTimeout(pollCoaching, 3000);
+          }
+          pollCoaching();
+        </script>
+      {% endif %}
     {% endif %}
   {% else %}
     <a href="{{ url_for('swings.tag', swing_id=swing.id) }}" class="btn primary">

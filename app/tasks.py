@@ -99,5 +99,27 @@ def _auto_detect(swing, swing_dir):
         return  # a human's tags outrank the robot's
 
     if result["confidence"] >= AUTO_CONFIDENCE_MIN:
+        from .services import generate_coaching_for
+
         frames = {k: result[k] for k in ("p1", "p4", "p7", "p10")}
         apply_key_positions(swing, frames, method="auto", confidence=result["confidence"])
+        db.session.commit()  # metrics visible even if the API call below is slow
+        generate_coaching_for(swing)
+
+
+def enqueue_coaching(swing_id: int):
+    executor.submit(_coaching_job, swing_id)
+
+
+def _coaching_job(swing_id: int):
+    from .models import Swing
+    from .services import generate_coaching_for
+
+    with _app.app_context():
+        swing = db.session.get(Swing, swing_id)
+        if swing is not None:
+            try:
+                generate_coaching_for(swing)
+            except Exception:
+                _app.logger.exception("coaching for swing %s failed", swing_id)
+            db.session.commit()

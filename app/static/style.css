@@ -226,3 +226,23 @@ details summary { cursor: pointer; color: var(--muted); }
   font-size: 0.9rem;
 }
 
+.coaching h3 {
+  font-size: 0.95rem;
+  color: var(--accent);
+  margin-bottom: 0.25rem;
+}
+
+.coaching .one-liner {
+  font-size: 1.05rem;
+  font-style: italic;
+  color: var(--text);
+}
+
+.coaching li { margin-bottom: 0.5rem; }
+
+.coaching .drill {
+  display: block;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+

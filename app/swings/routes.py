@@ -114,12 +114,27 @@ def overlay_frame(swing_id, n):
     )
 
 
+@bp.route("/<int:swing_id>/keyframe/<pos>")
+@login_required
+def keyframe(swing_id, pos):
+    _get_own_swing(swing_id)
+    if pos not in ("p1", "p4", "p7", "p10"):
+        return "", 404
+    return send_from_directory(
+        DERIVED_DIR / str(swing_id) / "keyframes", f"key_{pos}.jpg"
+    )
+
+
 @bp.route("/<int:swing_id>/status")
 @login_required
 def status(swing_id):
     swing = _get_own_swing(swing_id)
+    analysis = swing.latest_analysis
     return jsonify(
-        status=swing.status, frame_count=swing.frame_count, error=swing.error
+        status=swing.status,
+        frame_count=swing.frame_count,
+        error=swing.error,
+        has_coaching=bool(analysis and analysis.coaching),
     )
 
 
@@ -151,6 +166,7 @@ def tag(swing_id):
 
         apply_key_positions(swing, frames, method="manual", confidence=1.0)
         db.session.commit()
+        tasks.enqueue_coaching(swing.id)
         flash("Key positions saved — metrics computed.")
         return redirect(url_for("swings.detail", swing_id=swing.id))
 
