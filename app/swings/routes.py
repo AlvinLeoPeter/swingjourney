@@ -183,6 +183,16 @@ def tag(swing_id):
     )
 
 
+@bp.route("/<int:swing_id>/notes", methods=["POST"])
+@login_required
+def save_notes(swing_id):
+    swing = _get_own_swing(swing_id)
+    swing.session.notes = request.form.get("notes", "").strip() or None
+    db.session.commit()
+    flash("Notes saved.")
+    return redirect(url_for("swings.detail", swing_id=swing.id))
+
+
 @bp.route("/<int:swing_id>/reprocess", methods=["POST"])
 @login_required
 def reprocess(swing_id):

@@ -60,6 +60,25 @@ h1 { font-size: 1.4rem; }
   font-size: 0.9rem;
 }
 
+.quality-ok {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.form textarea {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.6rem;
+  border-radius: 8px;
+  border: 1px solid #2e3f31;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
 .form input,
 .form select {
   display: block;

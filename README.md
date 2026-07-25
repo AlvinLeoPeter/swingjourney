@@ -38,6 +38,16 @@ into `instance/models/` on first run if it's missing.
   positions → metrics → annotate → coach
 - `instance/` — gitignored; sqlite db + uploaded videos live here
 
+## How a swing gets analyzed
+
+Upload → background worker extracts frames (720p, up to 60fps) → MediaPipe
+pose per frame → auto-detection guesses P1/P4/P7/P10 from the wrist
+trajectory (confidence-gated; manual tagging always available and always
+wins) → metrics computed from landmarks → annotated key-frame images →
+Claude writes coaching notes from the numbers (never the video). Every
+report shows a tracking-quality indicator, and low-confidence metrics say
+so instead of printing garbage.
+
 ## Data model in one breath
 
 A **User** has practice **Sessions** (date, club, swing type). Each session

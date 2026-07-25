@@ -36,10 +36,15 @@
     {% if analysis.metrics %}
       <div class="card">
         <h2>Metrics</h2>
-        {% if analysis.quality and analysis.quality.mean_key_visibility < 0.7 %}
-          <p class="quality-warn">⚠️ Landmark visibility was
-            {{ (analysis.quality.mean_key_visibility * 100)|round|int }}% —
-            treat these numbers with care. Better light / tighter clothing helps.</p>
+        {% if analysis.quality %}
+          {% set vis = (analysis.quality.mean_key_visibility * 100)|round|int %}
+          {% if analysis.quality.mean_key_visibility < 0.7 %}
+            <p class="quality-warn">⚠️ Landmark visibility was only {{ vis }}% —
+              treat these numbers with care. Better light / tighter clothing helps.</p>
+          {% else %}
+            <p class="quality-ok">Tracking quality: {{ vis }}% landmark visibility ·
+              pose detected on {{ (analysis.quality.detection_rate * 100)|round|int }}% of frames</p>
+          {% endif %}
         {% endif %}
         <table class="metrics-table">
           <thead><tr><th>Metric</th><th>Value</th><th>Benchmark</th></tr></thead>
@@ -151,6 +156,14 @@
     poll();
   </script>
 {% endif %}
+
+<form method="post" action="{{ url_for('swings.save_notes', swing_id=swing.id) }}" class="card form">
+  <label>Session notes
+    <textarea name="notes" rows="3"
+              placeholder="How did it feel? What were you working on?">{{ swing.session.notes or "" }}</textarea>
+  </label>
+  <button type="submit" class="btn">Save notes</button>
+</form>
 
 <details class="card">
   <summary>Original video</summary>
